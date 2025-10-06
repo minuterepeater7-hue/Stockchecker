@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Item {
+  id            Int       @id @default(autoincrement())
+  url           String
+  email         String?
+  frequency     String    @default("MIN_30")
+  status        String    @default("CHECKING")
+  title         String?
+  image         String?
+  site          String?
+  lastCheckedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  notifications Notification[]
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  item      Item     @relation(fields: [itemId], references: [id])
+  itemId    Int
+  type      String
+  message   String
+  createdAt DateTime @default(now())
+}
+
