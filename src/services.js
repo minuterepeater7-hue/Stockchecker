@@ -57,13 +57,18 @@ export async function checkStock(url) {
   try {
     const shopifyJson = await tryShopify(url);
     if (shopifyJson) {
-      const variants = shopifyJson?.product?.variants || [];
-      const inStock = variants.some(v => v.available);
+      const product = shopifyJson?.product || {};
+      const variants = product?.variants || [];
+      // Some shops omit `available`; use multiple signals
+      const inStockByAvailable = variants.some(v => v?.available === true);
+      const inStockByQty = variants.some(v => (v?.inventory_quantity ?? 0) > 0);
+      const inStockByBody = /in stock/i.test(product?.body_html || '');
+      const inStock = inStockByAvailable || inStockByQty || inStockByBody;
       return {
         inStock,
         meta: {
-          title: shopifyJson?.product?.title,
-          image: shopifyJson?.product?.images?.[0]?.src,
+          title: product?.title,
+          image: product?.images?.[0]?.src,
           site: 'shopify',
         },
       };
